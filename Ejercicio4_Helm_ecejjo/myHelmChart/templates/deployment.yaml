@@ -27,9 +27,9 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: java-webapp-db-deployment
+  name: javierjimenezolivares-db-deployment
   labels:
-    app: java-webapp-db
+    app: javierjimenezolivares-db
 spec:
   strategy:
     type: Recreate
@@ -75,21 +75,21 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: java-webapp-app-deployment
+  name: javierjimenezolivares-app-deployment
   labels:
-    app: java-webapp-db
+    app: javierjimenezolivares-db
 spec:
   selector:
     matchLabels:
-      app: java-webapp-db
+      app: javierjimenezolivares-db
   replicas: 1
   strategy:
     type: Recreate
   template:
     metadata:
-      name: java-webapp-db
+      name: javierjimenezolivares-db
       labels:
-        app: java-webapp-db
+        app: javierjimenezolivares-db
     spec:
       containers:
       - name: java
@@ -103,17 +103,17 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: java-webapp-db-service
+  name: javierjimenezolivares-db-service
   labels:
-    app: java-webapp-db
+    app: javierjimenezolivares-db
 spec:
   ports:
     - port: 8080
       targetPort: 8080
       protocol: TCP
-      name: java-webapp-db
+      name: javierjimenezolivares-db
   selector:
-    app: java-webapp-db
+    app: javierjimenezolivares-db
   type: LoadBalancer
 ---
 apiVersion: networking.k8s.io/v1beta1
@@ -130,13 +130,13 @@ spec:
       paths:
       - path: /anuncios(/|$)(.*)
         backend:
-          serviceName: java-webapp-db-service
+          serviceName: javierjimenezolivares-db-service
           servicePort: 8080
       - path: /anuncio(/|$)(.*)
         backend:
-          serviceName: java-webapp-db-service
+          serviceName: javierjimenezolivares-db-service
           servicePort: 8080
       - path: /nuevoAnuncio.html
         backend:
-          serviceName: java-webapp-db-service
+          serviceName: javierjimenezolivares-db-service
           servicePort: 8080
