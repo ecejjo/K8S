@@ -44,15 +44,15 @@ spec:
     spec:
       containers:
       - name: db
-        image: mysql:5.6
+        image: {{ .Values.db.image}}
         ports:
         - containerPort: 3306
           name: mysql
         env:
           - name: MYSQL_ROOT_PASSWORD
-            value: pass
+            value: {{ .Values.common.password}}
           - name: MYSQL_DATABASE
-            value: test
+            value: {{ .Values.common.database}}
         volumeMounts:
           - mountPath: "/var/lib/mysql"
             name: db-volume
@@ -93,12 +93,12 @@ spec:
     spec:
       containers:
       - name: java
-        image: codeurjc/java-webapp-bbdd:v3
+        image: {{ .Values.app.image}}
         env:
           - name: MYSQL_ROOT_PASSWORD
-            value: pass
+            value: {{ .Values.common.password}}
           - name: MYSQL_DATABASE
-            value: test
+            value: {{ .Values.common.database}}
 ---
 apiVersion: v1
 kind: Service
