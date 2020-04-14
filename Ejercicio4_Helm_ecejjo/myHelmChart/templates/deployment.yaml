@@ -1,0 +1,141 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: 1g-volume
+spec:
+  storageClassName: ejercicio4-scn
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-1g
+spec:
+  storageClassName: ejercicio4-scn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-webapp-db-deployment
+  labels:
+    app: java-webapp-db
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: db
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: mysql:5.6
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: pass
+          - name: MYSQL_DATABASE
+            value: test
+        volumeMounts:
+          - mountPath: "/var/lib/mysql"
+            name: db-volume
+      volumes:
+        - name: db-volume
+          persistentVolumeClaim:
+            claimName: pvc-1g
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: db
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-webapp-app-deployment
+  labels:
+    app: java-webapp-db
+spec:
+  selector:
+    matchLabels:
+      app: java-webapp-db
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      name: java-webapp-db
+      labels:
+        app: java-webapp-db
+    spec:
+      containers:
+      - name: java
+        image: codeurjc/java-webapp-bbdd:v3
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: pass
+          - name: MYSQL_DATABASE
+            value: test
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-webapp-db-service
+  labels:
+    app: java-webapp-db
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: java-webapp-db
+  selector:
+    app: java-webapp-db
+  type: LoadBalancer
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress  
+metadata:  
+  name: ecejjo-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:  
+  rules:
+  - host: www.ecejjo.com
+    http:
+      paths:
+      - path: /anuncios(/|$)(.*)
+        backend:
+          serviceName: java-webapp-db-service
+          servicePort: 8080
+      - path: /anuncio(/|$)(.*)
+        backend:
+          serviceName: java-webapp-db-service
+          servicePort: 8080
+      - path: /nuevoAnuncio.html
+        backend:
+          serviceName: java-webapp-db-service
+          servicePort: 8080
