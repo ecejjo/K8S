@@ -1,0 +1,4 @@
+# Deploy in minikube by running:
+
+cd myHelmChart
+helm install --debug .
