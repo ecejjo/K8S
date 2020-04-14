@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ejercicio4-francisco-javier-jimenez-app
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ejercicio4-francisco-javier-jimenez-app
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: ejercicio4-francisco-javier-jimenez-app
+    spec:
+      containers:
+      - name: ejercicio4-francisco-javier-jimenez-app
+        image: codeurjc/java-webapp-bbdd:v2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "pass"
+        - name: MYSQL_DATABASE
+          value: "db"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ejercicio4-francisco-javier-jimenez-app
+  labels:
+    app: ejercicio4-francisco-javier-jimenez-app
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: ejercicio4-francisco-javier-jimenez-app-port
+  selector:
+    app: ejercicio4-francisco-javier-jimenez-app
+  type: NodePort

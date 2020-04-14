@@ -1,0 +1,51 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ejercicio4-francisco-javier-jimenez-db
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ejercicio4-francisco-javier-jimenez-db
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: ejercicio4-francisco-javier-jimenez-db
+    spec:
+      containers:
+      - name: ejercicio4-francisco-javier-jimenez-db
+        image: mysql:5.6
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "pass"
+        - name: MYSQL_DATABASE
+          value: "db"
+        volumeMounts:
+        - mountPath: "/var/lib/mysql"
+          name: mysql-storage
+      volumes:
+        - name: mysql-storage
+          persistentVolumeClaim:
+            claimName: pvc-1g
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+  labels:
+    app: ejercicio4-francisco-javier-jimenez-db
+spec:
+  ports:
+    - port: 3306
+      targetPort: 3306
+      protocol: TCP
+      name: ejercicio4-francisco-javier-jimenez-db-port
+  selector:
+    app: ejercicio4-francisco-javier-jimenez-db
+  type: ClusterIP
+

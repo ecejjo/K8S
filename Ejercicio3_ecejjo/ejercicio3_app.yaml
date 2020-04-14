@@ -1,0 +1,43 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ejercicio3-app
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: ejercicio3-app
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: ejercicio3-app
+    spec:
+      containers:
+      - name: ejercicio3-app
+        image: codeurjc/java-webapp-bbdd:v2
+        ports:
+        - containerPort: 8080
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: "pass"
+        - name: MYSQL_DATABASE
+          value: "test"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ejercicio3-app-service
+  labels:
+    app: ejercicio3-app
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: ejercicio3-app-port
+  selector:
+    app: ejercicio3-app
+  type: NodePort

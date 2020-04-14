@@ -1,0 +1,177 @@
+[debug] Created tunnel using local port: '57346'
+
+[debug] SERVER: "127.0.0.1:57346"
+
+[debug] Original chart version: ""
+[debug] CHART PATH: C:\Users\ecejjo\OneDrive - Ericsson AB\Master Software Craftmanshift\Practicas\Kubernetes\Ejercicio4_Helm_ecejjo\db
+
+NAME:   newbie-turkey
+REVISION: 1
+RELEASED: Mon Apr 13 13:18:19 2020
+CHART: db-0.1.0
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+affinity: {}
+busybox:
+  image: busybox
+  tag: 1.29.3
+fullnameOverride: ""
+image:
+  pullPolicy: IfNotPresent
+  repository: mysql
+  tag: 5.6
+imagePullSecrets: []
+ingress:
+  annotations: {}
+  enabled: false
+  hosts:
+  - host: chart-example.local
+    paths: []
+  tls: []
+mysqlDatabase: test
+mysqlRootPassword: pass
+nameOverride: ""
+nodeSelector: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 3306
+  type: ClusterIP
+serviceAccount:
+  create: true
+  name: null
+ssl:
+  enabled: false
+tolerations: []
+
+HOOKS:
+---
+# newbie-turkey-db-test-connection
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "newbie-turkey-db-test-connection"
+  labels:
+    app.kubernetes.io/name: db
+    helm.sh/chart: db-0.1.0
+    app.kubernetes.io/instance: newbie-turkey
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Tiller
+  annotations:
+    "helm.sh/hook": test-success
+spec:
+  containers:
+    - name: wget
+      image: busybox
+      command: ['wget']
+      args:  ['newbie-turkey-db:3306']
+  restartPolicy: Never
+MANIFEST:
+
+---
+# Source: db/templates/mysql_secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: newbie-turkey-db
+  namespace: default
+  labels:
+    app: newbie-turkey-db
+    chart: "db-0.1.0"
+    release: "newbie-turkey"
+    heritage: "Tiller"
+type: Opaque
+data:
+  
+  mysql-root-password:  "cGFzcw=="
+  
+  
+  
+  mysql-password: "TDFLdmRwZW9LNw=="
+---
+# Source: db/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: newbie-turkey-db
+  labels:
+    app.kubernetes.io/name: db
+    helm.sh/chart: db-0.1.0
+    app.kubernetes.io/instance: newbie-turkey
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Tiller
+---
+# Source: db/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: newbie-turkey-db
+  labels:
+    app.kubernetes.io/name: db
+    helm.sh/chart: db-0.1.0
+    app.kubernetes.io/instance: newbie-turkey
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Tiller
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3306
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: db
+    app.kubernetes.io/instance: newbie-turkey
+---
+# Source: db/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: newbie-turkey-db
+  labels:
+    app.kubernetes.io/name: db
+    helm.sh/chart: db-0.1.0
+    app.kubernetes.io/instance: newbie-turkey
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Tiller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: db
+      app.kubernetes.io/instance: newbie-turkey
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: db
+        app.kubernetes.io/instance: newbie-turkey
+    spec:
+      serviceAccountName: newbie-turkey-db
+      securityContext:
+        {}
+        
+      containers:
+        - name: db
+          securityContext:
+            {}
+            
+          image: "mysql:5.6"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}

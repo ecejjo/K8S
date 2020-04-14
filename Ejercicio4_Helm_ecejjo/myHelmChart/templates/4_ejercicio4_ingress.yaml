@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress  
+metadata:  
+  name: ecejjo-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:  
+  rules:
+  - host: www.ecejjo.com
+    http:
+      paths:
+      - path: /anuncios(/|$)(.*)
+        backend:
+          serviceName: java-webapp-db-service
+          servicePort: 8080
+      - path: /anuncio(/|$)(.*)
+        backend:
+          serviceName: java-webapp-db-service
+          servicePort: 8080
+      - path: /nuevoAnuncio.html
+        backend:
+          serviceName: java-webapp-db-service
+          servicePort: 8080
+          

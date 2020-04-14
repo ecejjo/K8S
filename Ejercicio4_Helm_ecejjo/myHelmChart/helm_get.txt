@@ -1,0 +1,186 @@
+REVISION: 1
+RELEASED: Tue Apr 14 07:52:09 2020
+CHART: myHelmChart-0.1.0
+USER-SUPPLIED VALUES:
+{}
+
+COMPUTED VALUES:
+affinity: {}
+fullnameOverride: ""
+image:
+  pullPolicy: IfNotPresent
+  repository: nginx
+  tag: stable
+imagePullSecrets: []
+ingress:
+  annotations: {}
+  enabled: false
+  hosts:
+  - host: chart-example.local
+    paths: []
+  tls: []
+nameOverride: ""
+nodeSelector: {}
+podSecurityContext: {}
+replicaCount: 1
+resources: {}
+securityContext: {}
+service:
+  port: 80
+  type: ClusterIP
+serviceAccount:
+  create: true
+  name: null
+tolerations: []
+
+HOOKS:
+MANIFEST:
+
+---
+# Source: myHelmChart/templates/1_ejercicio4_volumenes.yaml
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: 1g-volume
+spec:
+  storageClassName: ejercicio4-scn
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+# Source: myHelmChart/templates/1_ejercicio4_volumenes.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-1g
+spec:
+  storageClassName: ejercicio4-scn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: myHelmChart/templates/2_ejercicio4_db.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  ports:
+  - port: 3306
+  selector:
+    app: db
+  type: ClusterIP
+---
+# Source: myHelmChart/templates/3_ejercicio4_app.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: java-webapp-db-service
+  labels:
+    app: java-webapp-db
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+      name: java-webapp-db
+  selector:
+    app: java-webapp-db
+  type: LoadBalancer
+---
+# Source: myHelmChart/templates/2_ejercicio4_db.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-webapp-db-deployment
+  labels:
+    app: java-webapp-db
+spec:
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: db
+  replicas: 1 # tells deployment to run 1 pods matching the template
+  template: # create pods using pod definition in this template
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+      - name: db
+        image: mysql:5.6
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: pass
+          - name: MYSQL_DATABASE
+            value: test
+        volumeMounts:
+          - mountPath: "/var/lib/mysql"
+            name: db-volume
+      volumes:
+        - name: db-volume
+          persistentVolumeClaim:
+            claimName: pvc-1g
+---
+# Source: myHelmChart/templates/3_ejercicio4_app.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: java-webapp-app-deployment
+  labels:
+    app: java-webapp-db
+spec:
+  selector:
+    matchLabels:
+      app: java-webapp-db
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      name: java-webapp-db
+      labels:
+        app: java-webapp-db
+    spec:
+      containers:
+      - name: java
+        image: codeurjc/java-webapp-bbdd:v3
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            value: pass
+          - name: MYSQL_DATABASE
+            value: test
+---
+# Source: myHelmChart/templates/4_ejercicio4_ingress.yaml
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress  
+metadata:  
+  name: ecejjo-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:  
+  rules:
+  - host: www.ecejjo.com
+    http:
+      paths:
+      - path: /anuncios(/|$)(.*)
+        backend:
+          serviceName: ejercicio4-ecejjo-app
+          servicePort: 8080
+      - path: /anuncio(/|$)(.*)
+        backend:
+          serviceName: ejercicio4-ecejjo-app
+          servicePort: 8080
+      - path: /nuevoAnuncio.html
+        backend:
+          serviceName: ejercicio4-ecejjo-app
+          servicePort: 8080

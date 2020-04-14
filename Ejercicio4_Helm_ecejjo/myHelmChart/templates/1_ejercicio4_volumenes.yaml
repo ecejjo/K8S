@@ -1,0 +1,25 @@
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: 1g-volume
+spec:
+  storageClassName: ejercicio4-scn
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-1g
+spec:
+  storageClassName: ejercicio4-scn
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
